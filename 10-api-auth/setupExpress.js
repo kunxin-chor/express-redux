@@ -5,12 +5,15 @@ const cookieParser = require("cookie-parser");
 const flash = require("connect-flash");
 const passport = require("./passport/setup");
 
+// JWT
+const JWTStrategy = require('passport-jwt').Strategy;
+const ExtractJWT = require('passport-jwt').ExtractJwt;
+
 function setupExpressApp(app) {
   // setup sessions and flash
   app.use(cookieParser("secret"));
   app.use(session({ cookie: { maxAge: 60000 } }));
   app.use(flash());
-  
 
   // setup view engine
   app.set("view engine", "hbs");
@@ -25,9 +28,9 @@ function setupExpressApp(app) {
     next();
   });
 
-  // 1E. ENABLE FORMS AND
+  // 1E. ENABLE FORMS
   app.use(express.urlencoded({ extended: false }));
-
+  app.use(express.json());
 
   // 1F. ENABLE PASSPORT
   app.use(passport.initialize()); // American spelling!
@@ -46,6 +49,7 @@ function isAuthenticated(req, res, next) {
     // IF A USER ISN'T LOGGED IN, THEN REDIRECT THEM SOMEWHERE
     res.redirect("/");
   }
+
 
 module.exports = {
   setupExpressApp, isAuthenticated
