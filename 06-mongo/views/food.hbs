@@ -9,12 +9,16 @@
             <th>Name</th>
             <th>Calories</th>
             <th>Tags</th>
+            <th></th>
         </tr>
         {{#each foodRecords}}
          <tr>
-            <td>{{this.foodName}}</td>
+            <td>
+                <a href="/food/{{this._id}}">{{this.foodName}}</a>
+            </td>
             <td>{{this.calories}}</td>
             <td>{{join this.tags ", "}}</td>
+            <td><a href="/food/{{this._id}}/notes/add" class="btn btn-primary">Add Note</a></td>
          </tr>   
         {{/each}}
     </thead>

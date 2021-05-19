@@ -117,6 +117,98 @@ async function main() {
     res.redirect("/food");
   });
 
+  app.get('/food/:foodid/notes/add', async (req,res)=>{
+    let db = MongoUtil.getDB();
+    let foodRecord = await db.collection("food").findOne({
+      _id: ObjectId(req.params.foodid)
+    });
+
+    res.render('add_note', {
+      'food': foodRecord
+    })
+  })
+
+  app.post('/food/:foodid/notes/add', async (req,res)=>{
+    let db = MongoUtil.getDB();
+    let noteContent = req.body.content;
+    let foodID = req.params.foodid;
+    let response = await db.collection('food').updateOne({
+      "_id":ObjectId(foodID)
+    },{
+      '$push':{
+        'notes':{
+          '_id': new ObjectId(),
+          'content': noteContent
+        }
+      }
+    })
+    res.redirect('/food')
+  })
+
+  app.get('/food/:foodid', async(req,res) => {
+    let db = MongoUtil.getDB();
+    let foodRecord = await db.collection("food").findOne({
+      _id: ObjectId(req.params.foodid)
+    });
+    res.render('food_details',{
+      'food': foodRecord
+    })
+  })
+
+  app.get('/note/:noteid/edit', async(req,res)=>{
+    let db = MongoUtil.getDB();
+    let results = await db.collection('food').findOne({
+      'notes._id': ObjectId(req.params.noteid)       
+    },{
+      'projection':{
+        'notes':{
+          '$elemMatch':{
+            '_id': ObjectId(req.params.noteid)
+          }
+        }
+      }
+    })
+    
+    let wantedNote = results.notes[0];
+    res.render('edit_note',{
+      'note': wantedNote
+    })
+  })
+
+  app.post('/note/:noteid/edit', async(req,res)=>{
+    let db = MongoUtil.getDB();
+    let foodRecord = await db.collection('food').findOne({
+      'notes._id': ObjectId(req.params.noteid)       
+    });
+    await db.collection('food').updateOne({
+      'notes._id': ObjectId(req.params.noteid)
+    },{
+      '$set':{
+        'notes.$.content': req.body.content
+      }
+    })
+    res.redirect('/food/'+ foodRecord._id)
+  })
+
+  app.get('/note/:noteid/delete', async(req,res)=>{
+    let db = MongoUtil.getDB();
+ 
+    let foodRecord = await db.collection('food').findOne({
+      'notes._id': ObjectId(req.params.noteid)       
+    });
+
+    await db.collection('food').updateOne({
+      '_id': ObjectId(foodRecord._id)
+    },{
+      '$pull':{
+        'notes': {
+          '_id': ObjectId(req.params.noteid)
+        }
+      }
+    })
+    res.redirect('/food/'+ foodRecord._id)
+  })
+
   // 3. RUN SERVER
   app.listen(3000, () => console.log("Server started"));
 }
